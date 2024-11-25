@@ -168,7 +168,7 @@ plt.title("Male")
 plt.suptitle("Survival Rate by Gender", fontsize=16)
 plt.show()
 plt.clf()
-[Survival Rate by Gender的輸出]()
+[Survival Rate by Gender的輸出](https://drive.google.com/file/d/1yubcrscoLDHfqlzam3N3O5kxaFJVAstl/view?usp=sharing)
 
 ### 以性別分析Survied的比例（圓餅圖）
 sizes_survived_gender = [female_survived,male_survived]
@@ -201,7 +201,7 @@ plt.title("Unsurvived")
 plt.suptitle("Gender Ratio by Survival", fontsize=16)
 plt.show()
 plt.clf()
-[Gender Ratio by Survival的輸出]()
+[Gender Ratio by Survival的輸出](https://drive.google.com/file/d/1DtHdv7H7-XRqzd5t95f3Gng_ZZmd0ziG/view?usp=sharing)
 
 ### 以艙等分析Survied的比例（圓餅圖）
 pclass_unique = sorted(df_combined["Pclass"].unique())
@@ -229,7 +229,7 @@ plt.suptitle("Survival Rate by Pclass", fontsize=16)
 plt.tight_layout()
 plt.show()
 plt.clf()
-[Survival Rate by Pclass的輸出](https://drive.google.com/file/d/11ATIA6JCFka9zyzpCIKVzmMVXWav-ITG/view?usp=sharing)
+[Survival Rate by Pclass的輸出](https://drive.google.com/file/d/1sY91qoOqaLEYr9N_8P0lCBrkljTzO944/view?usp=sharing)
 
 ### 以Age分布分析Survied的數量（直方圖）
 df_combined_age =df_combined[~df_combined["Age"].between(-1,0)]
