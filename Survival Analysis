@@ -1,3 +1,31 @@
+# Titanic Data Analysis Project
+
+## 專案簡介
+本專案基於 Titanic 數據集，使用 Python 進行數據整理、分析與可視化，探索乘客生存率在各因素中的狀況。
+
+## 數據集介紹
+- 來源：Kaggle Titanic Dataset (https://www.kaggle.com/c/titanic)
+- 內容：乘客基本資訊（年齡、性別、艙等、票價等）與生存狀態。
+
+## 使用工具
+- Python Libraries: pandas, numpy, matplotlib, seaborn
+
+## 分析流程
+1. 數據整理：統一格式並處理缺失值與異常數據。
+2. 數據探索：生存率與性別、年齡、艙等、家庭人數等因素的狀況。
+3. 數據可視化：使用直方圖、折線圖、長條圖與圓餅圖展示結果。
+4. 結論：各因素中較高機率的倖存狀況。
+
+## 成果展示
+- 鐵達尼號生存率分析（https://drive.google.com/drive/folders/1d3Syl5zu1HTbUf2gqL-NMIzLVtBVigJf?usp=sharing）
+
+## 如何執行
+1. 下載數據資料
+2. 在Visual Studio Code編程
+3. 將結果撰寫程報告：https://drive.google.com/drive/folders/1d3Syl5zu1HTbUf2gqL-NMIzLVtBVigJf?usp=sharing
+4. 將code分享到Github：https://github.com/SandyLin1112/Titanic
+
+## python code
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
