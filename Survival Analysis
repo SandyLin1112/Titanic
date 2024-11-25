@@ -1,0 +1,338 @@
+import pandas as pd
+from matplotlib import pyplot as plt
+import seaborn as sns
+import numpy as np
+df_train = pd.read_csv("train.csv")
+df_test = pd.read_csv("test.csv")
+df_gender = pd.read_csv("gender_submission.csv")
+
+df_test_gender = pd.merge(df_test, df_gender, on='PassengerId', how='outer')
+df_combined = pd.concat([df_train, df_test_gender], axis=0)
+df_combined_stored = df_combined.sort_values(by='PassengerId', ascending=False)
+
+df_combined["Survived"] = df_combined["Survived"].astype('category')
+
+#print(df_combined.info())
+#print(df_combined.describe())
+
+# 整理資料&處理缺失值
+df_combined["Age"] = df_combined["Age"].fillna(-1)  # 用特殊值標記缺失值（如 -1）或填充中位數（.fillna(df["Age"].median())）
+df_combined["CabinGroup"] = df_combined["Cabin"].str[0]
+df_combined["CabinGroup"] = df_combined["CabinGroup"].fillna("None")
+df_combined["Fare"] = df_combined["Fare"].fillna("None")
+df_combined["Embarked"] = df_combined["Embarked"].fillna("None")
+
+colors = ['#26ABF2', '#FF5B57']
+sns.set(style="whitegrid")
+
+#Survied的數量（長條圖）
+ax_1 = sns.countplot(x='Survived', data=df_combined, palette=colors) 
+plt.title("Number of Survived")
+plt.legend(labels=['Unsurvived', 'Survived'])
+x = [0,1]
+new_labels = ['Unsurvived', 'Survived']
+plt.xlabel("")  
+plt.ylabel("")  
+plt.xticks(x, new_labels)
+for p in ax_1.patches:
+    ax_1.text(p.get_x() + p.get_width() / 2,  
+            p.get_height() + 0.1,          
+            int(p.get_height()),           
+            ha='center', va='bottom', fontsize=12)
+plt.show()
+plt.clf()
+
+#以Pclass分析Survied的數量（長條圖）
+ax_2 = sns.countplot(x=df_combined["Pclass"], hue=df_combined["Survived"], palette=colors)
+plt.title("Number of Survived by Pclass")
+plt.legend(labels=['Unsurvived', 'Survived'])
+x = [0,1,2]
+new_labels = ["1 st","2 nd","3 rd"]
+plt.ylabel("")  
+plt.xticks(x, new_labels)
+for p in ax_2.patches:
+    ax_2.text(p.get_x() + p.get_width() / 2,  
+            p.get_height() + 0.1,           
+            int(p.get_height()),            
+            ha='center', va='bottom', fontsize=12)
+plt.show()
+plt.clf()
+
+#以Sex分析Survied的數量（長條圖）
+ax_3 = sns.countplot(x=df_combined["Sex"], hue=df_combined["Survived"], palette=colors) 
+plt.title("Number of Survived by Gender")
+plt.legend(labels=['Unsurvived', 'Survived'])
+x = ["male", "female"]
+new_labels = ["Male","Female"]
+plt.xlabel("")  
+plt.ylabel("")  
+plt.xticks(x, new_labels)
+for p in ax_3.patches:
+    ax_3.text(p.get_x() + p.get_width() / 2,  
+            p.get_height() + 0.1,           
+            int(p.get_height()),            
+            ha='center', va='bottom', fontsize=12)
+plt.show()
+plt.clf()
+
+df_combined["Survived"] = df_combined["Survived"].astype(int)
+survived_total = df_combined["Survived"].sum()
+passengers_total = df_combined["PassengerId"].nunique()
+unsurvived_total = passengers_total - survived_total
+female_total = (df_combined["Sex"]=="female").sum()
+female_survived = df_combined[(df_combined["Survived"] == 1) & (df_combined["Sex"] == "female")].shape[0]
+female_unsurvived = female_total - female_survived
+male_total = (df_combined["Sex"]=="male").sum()
+male_survived = df_combined[(df_combined["Survived"] == 1) & (df_combined["Sex"] == "male")].shape[0]
+male_unsurvived = male_total - male_survived
+
+explode = (0.1, 0)
+colors = ['#FF5B57', '#26ABF2']
+
+#Survied的比例（圓餅圖）
+sizes_survived = [survived_total, unsurvived_total]
+label_survied=["Survied","Unsurvied"]
+ax_4 = plt.pie(
+    sizes_survived, 
+    labels=label_survied, 
+    colors=colors, 
+    autopct='%1.1f%%', 
+    startangle=90,  
+    explode=explode
+)
+plt.title("Survival Rate")
+plt.show()
+plt.clf()
+
+#以女性/男性分析Survied的比例（圓餅圖）
+sizes_survived_female = [female_survived,female_unsurvived]
+label_survived_female =["Survied","Unsurvied"]
+plt.figure(figsize=(15, 6))
+plt.subplot(1, 2, 1)
+ax_5 = plt.pie(
+    sizes_survived_female, 
+    labels=label_survived_female, 
+    colors=colors, 
+    autopct='%1.1f%%',  
+    startangle=90,  
+    explode=explode
+)
+plt.title("Female")
+
+plt.subplot(1, 2, 2)
+sizes_survived_male = [male_survived,male_unsurvived]
+label_survived_male =["Survied","Unsurvived"]
+ax_6 = plt.pie(
+    sizes_survived_male, 
+    labels=label_survived_male, 
+    colors=colors, 
+    autopct='%1.1f%%',  
+    startangle=90,  
+    explode=explode 
+)
+plt.title("Male")
+
+plt.suptitle("Survival Rate by Gender ", fontsize=16)
+plt.show()
+plt.clf()
+
+#以性別分析Survied的比例（圓餅圖）
+sizes_survived_gender = [female_survived,male_survived]
+label_survived_gender =["Female","Male"]
+plt.figure(figsize=(15, 6))
+plt.subplot(1, 2, 1)
+ax_7 = plt.pie(
+    sizes_survived_gender, 
+    labels=label_survived_gender, 
+    colors=colors, 
+    autopct='%1.1f%%',  
+    startangle=90,  
+    explode=explode
+)
+plt.title("Survived")
+
+plt.subplot(1, 2, 2)
+sizes_unsurvived_gender = [female_unsurvived,male_unsurvived]
+label_unsurvived_gender =["Female","Male"]
+ax_8 = plt.pie(
+    sizes_unsurvived_gender, 
+    labels=label_unsurvived_gender, 
+    colors=colors, 
+    autopct='%1.1f%%',
+    startangle=90,
+    explode=explode
+)
+plt.title("Unsurvived")
+
+plt.suptitle("Gender Ratio by Survival", fontsize=16)
+plt.show()
+plt.clf()
+
+#以艙等分析Survied的比例（圓餅圖）
+pclass_unique = sorted(df_combined["Pclass"].unique())
+fig, ax_9 = plt.subplots(1, len(pclass_unique), figsize=(15, 6))
+for i, pclass in enumerate(pclass_unique):
+    
+    survived_total = df_combined[(df_combined["Pclass"] == pclass) & (df_combined["Survived"] == 1)].shape[0]
+    unsurvived_total = df_combined[(df_combined["Pclass"] == pclass) & (df_combined["Survived"] == 0)].shape[0]
+    
+    sizes = [survived_total, unsurvived_total]
+    labels = ["Survived", "Unsurvived"]
+    explode = (0.1, 0)
+
+    ax_9[i].pie(
+        sizes,
+        labels=labels,
+        colors=colors,
+        autopct='%1.1f%%',
+        startangle=90,
+        explode=explode,
+    )
+    ax_9[i].set_title(f"Pclass {pclass}")
+
+plt.suptitle("Survival Rate by Pclass", fontsize=16)
+plt.tight_layout()
+plt.show()
+plt.clf()
+
+#以Age分布分析Survied的數量（直方圖）
+df_combined_age =df_combined[~df_combined["Age"].between(-1,0)]
+df_combined_age["Age"] = np.ceil(df_combined_age["Age"]).astype(int)
+bins = range(0, 101, 10)  # 每 10 歲為一組
+labels = [f"{i}-{i+10}" for i in bins[:-1]]  
+df_combined_age["AgeGroup"] = pd.cut(df_combined_age["Age"], bins=bins, labels=labels, right=False)
+
+age_survived = df_combined_age[df_combined_age["Survived"] == 1]["Age"]
+age_unsurvived = df_combined_age[df_combined_age["Survived"] == 0]["Age"]
+counts_survived, edges = np.histogram(age_survived, bins=bins)
+counts_unsurvived, _ = np.histogram(age_unsurvived, bins=bins)
+
+#print(df_combined_age.info())
+#print(df_combined_age.describe())
+
+# 繪製直方圖
+ax_10 = plt.hist(age_unsurvived, bins=50, range=(0, 99), alpha=0.7, color="#26ABF2", label="Unsurvived")
+ax_11 = plt.hist(age_survived, bins=50, range=(0, 99), alpha=0.5, color="#FF5B57", label="Unsurvived")
+plt.xticks([i * 10 for i in range(0, 10)])
+plt.yticks([i * 10 for i in range(0, 7)])
+plt.xlabel("Age")
+plt.ylabel("Frequency")
+plt.title("Age Distributions of Survival", fontsize=16)
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.legend(labels=['Unsurvived', 'Survived'])
+plt.show()
+plt.clf()
+
+#以AgeGroup分析Survied的比率
+grouped = df_combined_age.groupby("AgeGroup")["Survived"].value_counts().unstack(fill_value=0) 
+grouped = grouped[grouped.sum(axis=1) > 0] 
+
+x_ticks = [(edges[i] + edges[i+1]) / 2 for i in range(len(edges)-1)]
+fig, ax10 = plt.subplots(figsize=(10, 6))
+ax10.bar(edges[:-1], counts_unsurvived, width=np.diff(edges), align="edge", alpha=0.7, color="#26ABF2", label="Unsurvived")
+ax10.bar(edges[:-1], counts_survived, width=np.diff(edges), align="edge", alpha=0.5, color="#FF5B57", label="Survived")
+ax10.set_ylabel("Frequency")
+ax10.legend(loc="upper left")
+
+ax11 = ax10.twinx()  
+survival_rate = counts_survived / (counts_survived + counts_unsurvived)  
+ax11.plot(x_ticks, survival_rate, marker="o", color="#548235", label="Survival Rate")
+ax11.set_ylabel("Survival Rate")
+ax11.legend(loc="lower right")
+
+x_positions = range(5,105,10)
+for i, rate in enumerate(survival_rate):
+    if not np.isnan(rate):  
+        ax11.text(
+            x_positions[i],
+            rate + 0.05,  
+            f"{rate * 100:.2f}%",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            color="#548235"
+        )
+
+ax10.set_yticks(np.arange(0, 251, 50))  
+ax11.set_yticks(np.arange(0, 1.1, 0.2))  
+
+ax10.set_xlabel("Age")
+ax10.set_xticks(bins)
+plt.title("Age Group Distributions of Survival", fontsize=16)
+plt.show()
+plt.clf()
+
+num_groups = len(grouped)  
+cols = 4  
+rows = (num_groups + cols - 1) // cols  
+
+fig, axes = plt.subplots(rows, cols, figsize=(cols * 5, rows * 5))  
+axes = axes.flatten()  
+
+for i, (age_group, counts) in enumerate(grouped.iterrows()):
+    labels = ["Unsurvived", "Survived"]
+    axes[i].pie(
+        counts, 
+        labels=labels,
+        autopct="%1.1f%%", 
+        startangle=90, 
+        colors=['#26ABF2', '#FF5B57'], 
+        explode=explode  
+    )
+    axes[i].set_title(f"{age_group} Age")
+
+for j in range(len(grouped), len(axes)): 
+    axes[j].axis("off")
+
+plt.subplots_adjust(wspace=0.5, hspace=0.6, right=0.95) 
+plt.suptitle("Survival Rate by Age Group", fontsize=16)
+plt.tight_layout(rect=[0, 0, 1, 0.96]) 
+plt.show()
+plt.clf()
+
+#以家人分析Survival
+parch_survived = df_combined[df_combined["Survived"] == 1]["Parch"]
+parch_unsurvived = df_combined[df_combined["Survived"] == 0]["Parch"]
+sibsp_survived = df_combined[df_combined["Survived"] == 1]["SibSp"]
+sibsp_unsurvived = df_combined[df_combined["Survived"] == 0]["SibSp"]
+df_combined["Family"] = df_combined["Parch"] + df_combined["SibSp"]
+family_survived = df_combined[df_combined["Survived"] == 1]["Family"]
+family_unsurvived = df_combined[df_combined["Survived"] == 0]["Family"]
+x_ticks = range(0, 11, 1)
+
+ax_12 = plt.hist(parch_unsurvived,bins = 50, range = (0,9), alpha=0.7, color="#26ABF2", label="Unsurvived")
+ax_13 = plt.hist(parch_survived,bins = 50, range = (0,9), alpha=0.5, color="#FF5B57", label="Survived")
+plt.xlabel("Nunber of Parch")
+plt.xticks(x_ticks)
+plt.yticks([i * 100 for i in range(0, 8)])
+plt.ylabel("Frequency")
+plt.title("Parch Distributions of Survival", fontsize=16)
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.legend(labels=['Unsurvived', 'Survived'])
+plt.show()
+plt.clf()
+
+ax_15 = plt.hist(sibsp_unsurvived,bins = 50, range = (0,9), alpha=0.7, color="#26ABF2", label="Unsurvived")
+ax_14 = plt.hist(sibsp_survived,bins = 50, range = (0,9), alpha=0.5, color="#FF5B57", label="Survived")
+plt.xlabel("Nunber of SibSp")
+plt.xticks(x_ticks)
+plt.yticks([i * 100 for i in range(0, 7)])
+plt.ylabel("Frequency")
+plt.title("SibSp Distributions of Survival", fontsize=16)
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.legend(labels=['Unsurvived', 'Survived'])
+plt.show()
+plt.clf()
+
+ax_17 = plt.hist(family_unsurvived,bins = 50, range = (0,9), alpha=0.7, color="#26ABF2", label="Unsurvived")
+ax_16 = plt.hist(family_survived,bins = 50, range = (0,9), alpha=0.5, color="#FF5B57", label="Survived")
+plt.title("Survived", fontsize=14)
+plt.xlabel("Nunber of Family")
+plt.xticks(x_ticks)
+plt.yticks([i * 100 for i in range(0, 7)])
+plt.ylabel("Frequency")
+plt.title("Family Distributions of Survival", fontsize=16)
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.legend(labels=['Unsurvived', 'Survived'])
+plt.show()
+plt.clf()
