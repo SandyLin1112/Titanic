@@ -4,7 +4,7 @@
 本專案基於 Titanic 數據集，使用 Python 進行數據整理、分析與可視化，探索乘客生存率在各因素中的狀況。
 
 ## 數據集介紹
-- 來源：Kaggle Titanic Dataset (https://www.kaggle.com/c/titanic)
+- 來源：[Kaggle Titanic Dataset](https://www.kaggle.com/c/titanic)
 - 內容：乘客基本資訊（年齡、性別、艙等、票價等）與生存狀態。
 
 ## 使用工具
@@ -17,13 +17,13 @@
 4. 結論：各因素中較高機率的倖存狀況。
 
 ## 成果展示
-- 鐵達尼號生存率分析（https://drive.google.com/drive/folders/1d3Syl5zu1HTbUf2gqL-NMIzLVtBVigJf?usp=sharing）
+- [鐵達尼號生存率分析](https://drive.google.com/drive/folders/1d3Syl5zu1HTbUf2gqL-NMIzLVtBVigJf?usp=sharing)
 
 ## 如何執行
 1. 下載數據資料
 2. 在Visual Studio Code編程
-3. 將結果撰寫程報告：https://drive.google.com/drive/folders/1d3Syl5zu1HTbUf2gqL-NMIzLVtBVigJf?usp=sharing
-4. 將code分享到Github：https://github.com/SandyLin1112/Titanic
+3. 將結果撰寫程報告：[鐵達尼號生存率分析](https://drive.google.com/drive/folders/1d3Syl5zu1HTbUf2gqL-NMIzLVtBVigJf?usp=sharing)
+4. 將code分享到Github：[SandyLin的GitHub](https://github.com/SandyLin1112/Titanic)
 
 ## python code
 import pandas as pd
@@ -40,8 +40,10 @@ df_combined_stored = df_combined.sort_values(by='PassengerId', ascending=False)
 
 df_combined["Survived"] = df_combined["Survived"].astype('category')
 
-#print(df_combined.info())
-#print(df_combined.describe())
+print(df_combined.info())
+[df_combined.info()的輸出](https://drive.google.com/file/d/19sb43Ti2fdlfmWevWnic-qRThC7YJJ7u/view?usp=sharing)
+print(df_combined.describe())
+[df_combined.describe()的輸出](https://drive.google.com/file/d/19sb43Ti2fdlfmWevWnic-qRThC7YJJ7u/view?usp=sharing)
 
 # 整理資料&處理缺失值
 df_combined["Age"] = df_combined["Age"].fillna(-1)  # 用特殊值標記缺失值（如 -1）或填充中位數（.fillna(df["Age"].median())）
