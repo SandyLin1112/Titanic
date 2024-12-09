@@ -21,6 +21,7 @@ df_train["Family"] = df_train["Parch"] + df_train["SibSp"]
 print(df_train.info())
 
 #處理異常值
+##Age的異常值
 ages_1 = df_train["Age"]
 def age(ages_1):
     change_age = []
@@ -51,13 +52,13 @@ def check_age(ages_2):
 print(check_age(ages_2))
 print(df_train_modify.describe())
 
+##Fare的異常直
 is0_fare = df_train_modify[df_train_modify["Fare"] == 0].shape[0]
 print(is0_fare)
 
 df_train_modify_fare = df_train_modify.drop(df_train_modify[df_train_modify["Fare"] == 0].index).copy()
-df_train_modify_fare
 check_is0_fare = df_train_modify_fare[df_train_modify_fare["Fare"] == 0].shape[0]
-#print(check_is0_fare)
+print(check_is0_fare)
 
 
 #數據分析+視覺化
@@ -65,7 +66,8 @@ colors = ['#26ABF2', '#FF5B57','#25B544']
 label_survied = ['0 (Unsurvived)', '1 (Survived)']
 explode = (0.1, 0)
 
-##總體分析-891
+##總體分析
+###總體中倖存/罹難的總數（長條圖）
 ax_1 = sns.countplot(x='Survived', data=df_train_modify, palette=colors) 
 plt.title("Number of Survived")
 plt.legend(labels=['0 (Unsurvived)', '1 (Survived)'])
@@ -80,6 +82,7 @@ ax_1.set_axisbelow(True)
 plt.show()
 plt.clf()
 
+###總體中倖存/罹難的比例（圓餅圖）
 total_survived = df_train_modify["Survived"].sum()
 total_passenger = df_train_modify["PassengerId"].max()
 total_unsurvived = total_passenger - total_survived
@@ -96,7 +99,8 @@ plt.title("Survival Rate")
 #plt.show()
 plt.clf()
 
-##性別分析-891
+##性別分析
+###分析性別中倖存/罹難的總數與比例（長條圖+折線圖）
 categories = ["male","female"]
 total_survived_sex = df_train_modify[df_train_modify["Survived"] == 1]["Sex"].value_counts()
 total_unsurvived_sex = df_train_modify[df_train_modify["Survived"] == 0]["Sex"].value_counts()
@@ -145,6 +149,7 @@ ax_7_3.legend()
 plt.show()
 plt.clf()
 
+###分析倖存/罹難中性別的比例（圓餅圖）
 survived_unique = sorted(df_train_modify["Survived"].unique())
 fig, ax_9 = plt.subplots(1, len(survived_unique), figsize=(10, 6))
 for i, survived in enumerate(survived_unique):
@@ -167,7 +172,8 @@ plt.tight_layout()
 plt.show()
 plt.clf()
 
-##年齡分析-891
+##年齡分析
+###分析年齡中倖存/罹難的總數與比例（長條圖+折線圖）
 total_survived_age = df_train_modify[df_train_modify["Survived"] == 1]["Age"]
 total_unsurvived_age = df_train_modify[df_train_modify["Survived"] == 0]["Age"]
 ax_10_1 = plt.hist(total_unsurvived_age, bins=50, range=(0, 99), alpha=0.7, color="#26ABF2", label="Unsurvived")
@@ -184,7 +190,71 @@ ax.set_axisbelow(True)
 plt.show()
 plt.clf()
 
-##年齡區間分析-891
+###處理年齡缺失值-Fill Median
+median_age = df_train_modify['Age'].median()
+df_train_modify_age = df_train_modify.copy()
+df_train_modify_age["Age"] = df_train_modify_age['Age'].fillna(median_age)
+#print(df_train_modify_age.describe())
+
+###年齡分析-Fill Median
+total_survived_age_median = df_train_modify_age[df_train_modify_age["Survived"] == 1]["Age"]
+total_unsurvived_age_median = df_train_modify_age[df_train_modify_age["Survived"] == 0]["Age"]
+ax_11_1 = plt.hist(total_unsurvived_age_median, bins=50, range=(0, 99), alpha=0.7, color="#26ABF2", label="Unsurvived")
+ax_11_2 = plt.hist(total_survived_age_median, bins=50, range=(0, 99), alpha=0.5, color="#FF5B57", label="Survived")
+plt.xticks(range(0, 101, 10))
+plt.yticks(range(0, 170, 10))
+plt.xlabel("Age")
+plt.title("Age Distributions of Survival (Fill Missing Values)")
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.legend(labels=label_survied)
+ax = plt.gca()  
+ax.grid(zorder=0)  
+ax.set_axisbelow(True) 
+plt.show()
+plt.clf()
+
+###處理年齡缺失值-Fill Median GroupBy
+df_train_modify_age_groupby = df_train_modify.copy()
+median_by_group = df_train_modify_age_groupby.groupby(['Pclass', 'Sex','Survived'])['Age'].median()
+median_by_group_sum = df_train_modify_age_groupby.groupby(['Pclass', 'Sex','Survived']).agg(
+    Median=('Age', 'median'),
+    Count=('Age', 'count'),    
+    )  
+null_count_by_group = df_train_modify.groupby(['Pclass', 'Sex', 'Survived'])['Age'].apply(lambda x: x.isna().sum())
+print(null_count_by_group)
+
+def fill_age_grouped(row):
+    if pd.isna(row['Age']):
+        return median_by_group[row['Pclass'], row['Sex'], row['Survived']]
+    return row['Age']
+
+df_train_modify_age_groupby['Age'] = df_train_modify_age_groupby.apply(fill_age_grouped, axis=1)
+print(df_train_modify_age_groupby.describe())
+
+median_by_group_sum = df_train_modify_age_groupby.groupby(['Pclass', 'Sex','Survived']).agg(
+    Median=('Age', 'median'),
+    Count=('Age', 'count'),    
+    )  
+print(median_by_group_sum)
+
+###年齡分析-Fill Median GroupBy
+total_survived_age_median_groupby = df_train_modify_age_groupby[df_train_modify_age_groupby["Survived"] == 1]["Age"]
+total_unsurvived_age_median_groupby = df_train_modify_age_groupby[df_train_modify_age_groupby["Survived"] == 0]["Age"]
+ax_14_1 = plt.hist(total_unsurvived_age_median_groupby, bins=50, range=(0, 99), alpha=0.7, color="#26ABF2", label="Unsurvived")
+ax_14_2 = plt.hist(total_survived_age_median_groupby, bins=50, range=(0, 99), alpha=0.5, color="#FF5B57", label="Survived")
+plt.xticks(range(0, 101, 10))
+plt.yticks(range(0, 130, 10))
+plt.xlabel("Age")
+plt.title("Age Distributions of Survival (Fill Missing Values by Group)")
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.legend(labels=label_survied)
+ax = plt.gca()  
+ax.grid(zorder=0)  
+ax.set_axisbelow(True) 
+plt.show()
+plt.clf()
+
+###分析年齡區間的分布
 plt.figure()
 ax_12_1 = plt.hist(total_unsurvived_age, bins=10, range=(0, 100), alpha=0.7, color="#26ABF2", label="Unsurvived")
 ax_12_2 = plt.hist(total_survived_age, bins=10, range=(0, 100), alpha=0.5, color="#FF5B57", label="Survived")
@@ -218,73 +288,7 @@ for i, p in enumerate(ax.patches[11:]):
 plt.show()
 plt.clf()
 
-##處理年齡缺失值-Fill Median
-median_age = df_train_modify['Age'].median()
-df_train_modify_age = df_train_modify.copy()
-df_train_modify_age["Age"] = df_train_modify_age['Age'].fillna(median_age)
-#print(df_train_modify_age.describe())
-
-
-##年齡分析-Fill Median
-total_survived_age_median = df_train_modify_age[df_train_modify_age["Survived"] == 1]["Age"]
-total_unsurvived_age_median = df_train_modify_age[df_train_modify_age["Survived"] == 0]["Age"]
-ax_11_1 = plt.hist(total_unsurvived_age_median, bins=50, range=(0, 99), alpha=0.7, color="#26ABF2", label="Unsurvived")
-ax_11_2 = plt.hist(total_survived_age_median, bins=50, range=(0, 99), alpha=0.5, color="#FF5B57", label="Survived")
-plt.xticks(range(0, 101, 10))
-plt.yticks(range(0, 170, 10))
-plt.xlabel("Age")
-plt.title("Age Distributions of Survival (Fill Missing Values)")
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.legend(labels=label_survied)
-ax = plt.gca()  
-ax.grid(zorder=0)  
-ax.set_axisbelow(True) 
-plt.show()
-plt.clf()
-
-##處理年齡缺失值-Fill Median GroupBy
-df_train_modify_age_groupby = df_train_modify.copy()
-median_by_group = df_train_modify_age_groupby.groupby(['Pclass', 'Sex','Survived'])['Age'].median()
-median_by_group_sum = df_train_modify_age_groupby.groupby(['Pclass', 'Sex','Survived']).agg(
-    Median=('Age', 'median'),
-    Count=('Age', 'count'),    
-    )  
-null_count_by_group = df_train_modify.groupby(['Pclass', 'Sex', 'Survived'])['Age'].apply(lambda x: x.isna().sum())
-print(null_count_by_group)
-
-def fill_age_grouped(row):
-    if pd.isna(row['Age']):
-        return median_by_group[row['Pclass'], row['Sex'], row['Survived']]
-    return row['Age']
-
-df_train_modify_age_groupby['Age'] = df_train_modify_age_groupby.apply(fill_age_grouped, axis=1)
-print(df_train_modify_age_groupby.describe())
-
-median_by_group_sum = df_train_modify_age_groupby.groupby(['Pclass', 'Sex','Survived']).agg(
-    Median=('Age', 'median'),
-    Count=('Age', 'count'),    
-    )  
-print(median_by_group_sum)
-
-
-##年齡分析-Fill Median GroupBy
-total_survived_age_median_groupby = df_train_modify_age_groupby[df_train_modify_age_groupby["Survived"] == 1]["Age"]
-total_unsurvived_age_median_groupby = df_train_modify_age_groupby[df_train_modify_age_groupby["Survived"] == 0]["Age"]
-ax_14_1 = plt.hist(total_unsurvived_age_median_groupby, bins=50, range=(0, 99), alpha=0.7, color="#26ABF2", label="Unsurvived")
-ax_14_2 = plt.hist(total_survived_age_median_groupby, bins=50, range=(0, 99), alpha=0.5, color="#FF5B57", label="Survived")
-plt.xticks(range(0, 101, 10))
-plt.yticks(range(0, 130, 10))
-plt.xlabel("Age")
-plt.title("Age Distributions of Survival (Fill Missing Values by Group)")
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.legend(labels=label_survied)
-ax = plt.gca()  
-ax.grid(zorder=0)  
-ax.set_axisbelow(True) 
-plt.show()
-plt.clf()
-
-##年齡區間分析-Fill Median GroupBy
+###年齡區間分析-Fill Median GroupBy
 plt.figure()
 ax_15_1 = plt.hist(total_unsurvived_age_median_groupby, bins=10, range=(0, 100), alpha=0.7, color="#26ABF2", label="Unsurvived")
 ax_15_2 = plt.hist(total_survived_age_median_groupby, bins=10, range=(0, 100), alpha=0.5, color="#FF5B57", label="Survived")
@@ -324,7 +328,8 @@ for i, p in enumerate(ax.patches[12:]):
 plt.show()
 plt.clf()
 
-##Parch分析-891
+##Parch分析
+###分析Parch中倖存/罹難的總數與比例（長條圖+折線圖）
 categories = range(0,11)
 total_survived_parch = df_train_modify[df_train_modify["Survived"] == 1]["Parch"].value_counts()
 total_unsurvived_parch = df_train_modify[df_train_modify["Survived"] == 0]["Parch"].value_counts()
@@ -372,7 +377,8 @@ for i, (x_pos, rate) in enumerate(zip(categories, survival_rate_parch)):
 plt.show()
 plt.clf()
 
-##SibSp分析-891
+##SibSp分析
+###分析SibSp中倖存/罹難的總數與比例（長條圖+折線圖）
 total_survived_sibsp = df_train_modify[df_train_modify["Survived"] == 1]["SibSp"].value_counts()
 total_unsurvived_sibsp = df_train_modify[df_train_modify["Survived"] == 0]["SibSp"].value_counts()
 total_survived_sibsp = total_survived_sibsp.reindex(categories, fill_value=0)
@@ -418,7 +424,8 @@ for i, (x_pos, rate) in enumerate(zip(categories, survival_rate_sibsp)):
 plt.show()
 plt.clf()
 
-##Family分析-891
+##Family分析
+###分析Family中倖存/罹難的總數與比例（長條圖+折線圖）
 total_survived_family = df_train_modify[df_train_modify["Survived"] == 1]["Family"].value_counts()
 total_unsurvived_family = df_train_modify[df_train_modify["Survived"] == 0]["Family"].value_counts()
 total_survived_family = total_survived_family.reindex(categories, fill_value=0)
@@ -465,6 +472,8 @@ for i, (x_pos, rate) in enumerate(zip(categories, survival_rate_family)):
 plt.show()
 plt.clf()
 
+###分析Family與Age
+###分析Family中倖存/罹難的Age分布（箱型圖）
 plt.figure(figsize=(10, 6))
 ax_23 = sns.boxplot(data=df_train_modify, x='Family', y='Age', hue='Survived', palette=colors)
 plt.title('Age Distribution by Family and Survived')
@@ -474,27 +483,8 @@ plt.legend(title='Survived')
 plt.show()
 plt.clf()
 
-df_train_modify_survived = df_train_modify[df_train_modify["Survived"] == 1]
-plt.figure(figsize=(10, 6))
-ax_24 = sns.boxplot(data=df_train_modify_survived, x='Family', y='Age', hue='Sex', palette=['#FF5B57','#26ABF2'])
-plt.title('Age Distribution of Survived by Family and Sex')
-plt.ylabel('Age')
-plt.xlabel('Family')
-plt.legend(title='Sex')
-plt.show()
-plt.clf()
-
-df_train_modify_unsurvived = df_train_modify[df_train_modify["Survived"] == 0]
-plt.figure(figsize=(10, 6))
-ax_25 = sns.boxplot(data=df_train_modify_unsurvived, x='Family', y='Age', hue='Sex', palette=['#FF5B57','#26ABF2'])
-plt.title('Age Distribution of Unsurvived by Family and Sex')
-plt.ylabel('Age')
-plt.xlabel('Family')
-plt.legend(title='Sex')
-#plt.show()
-plt.clf()
-
-##艙等分析-891
+##社會經濟地位分析
+###分析Pclass中倖存/罹難的總數與比例（長條圖+折線圖）
 categories = [1, 2, 3]
 total_survived_pclass = df_train_modify[df_train_modify["Survived"] == 1]["Pclass"].value_counts()
 total_unsurvived_pclass = df_train_modify[df_train_modify["Survived"] == 0]["Pclass"].value_counts()
@@ -544,7 +534,8 @@ ax_5_3.legend(loc="upper center")
 plt.show()
 plt.clf()
 
-##Fare分析-891
+##Fare分析
+###分析Fare中倖存/罹難的分布（直方圖）
 total_survived_fare = df_train_modify_fare[df_train_modify_fare["Survived"] == 1]["Fare"]
 total_unsurvived_fare = df_train_modify_fare[df_train_modify_fare["Survived"] == 0]["Fare"]
 plt.figure()
@@ -562,7 +553,8 @@ ax.set_axisbelow(True)
 plt.show()
 plt.clf()
 
-##Cabin分析-891
+##Cabin分析
+###分析Cabin中倖存/罹難的總數與比例（長條圖+折線圖）
 df_train_modify_cabin = df_train_modify.dropna(subset=["Cabin"]).copy()
 categories = sorted(df_train_modify_cabin["Cabin_Class"].unique())
 total_survived_cabin = df_train_modify_cabin[df_train_modify_cabin["Survived"] == 1]["Cabin_Class"].value_counts()
@@ -610,11 +602,12 @@ for i, (x_pos, rate) in enumerate(zip(categories, survival_rate_cabin)):
 plt.show()
 plt.clf()
 
-##Cabin + Pclass + Fare 分析-891
+##分析Fare、Cabin、Pclass
 df_train_modify_fare['Cabin_Class'] = df_train_modify['Cabin'].fillna('Unknown').map(lambda x: x[0] if x != 'Unknown' else 'Unknown')
 grouped_stats = df_train_modify_fare.groupby(['Cabin_Class','Survived' ])['Fare'].agg(['min','max','mean', 'median', 'count']).reset_index()
 print(grouped_stats)
 
+###分析Cabin中倖存/罹難的Fare分布（箱型圖）
 plt.figure(figsize=(10, 6))
 ax_21 = sns.boxplot(data=df_train_modify_fare, x='Cabin_Class', y='Fare', hue='Survived', palette=colors)
 plt.title('Fare Distribution by Cabin Class and Survived')
@@ -624,6 +617,7 @@ plt.legend(title='Survived')
 plt.show()
 plt.clf()
 
+###分析Pclass中倖存/罹難的Fare分布（箱型圖）
 df_train_modify_fare = df_train_modify_fare.sort_values("Cabin_Class")
 plt.figure(figsize=(10, 6))
 ax_22 = sns.boxplot(data=df_train_modify_fare, x='Pclass', y='Fare', hue='Survived', palette=colors)
